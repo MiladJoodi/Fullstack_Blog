@@ -2,7 +2,8 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import prismadb from "./prismadb";
 import Credentials from "next-auth/providers/credentials";
-
+import { compare } from 'bcrypt';
+import { User } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prismadb),
@@ -11,7 +12,7 @@ export const authOptions: NextAuthOptions = {
         strategy: 'jwt',
     },
     pages: {
-        signIn: 'login',
+        signIn: '/login',
     },
     providers: [
         Credentials({
@@ -22,8 +23,8 @@ export const authOptions: NextAuthOptions = {
                     type: 'text',
                 },
                 password: {
-                    label: 'email',
-                    type: 'text',
+                    label: 'password',
+                    type: 'password',
                 }
             },
             async authorize(credentials){
@@ -41,8 +42,32 @@ export const authOptions: NextAuthOptions = {
                 );
 
                 if(!isPasswordValid) return null;
+                return user;
 
             }
         })
-    ]
+    ],
+    callbacks: {
+        jwt: ({token, user})=>{
+            const u = user as unknown as User;
+            if (user){
+                return{
+                    ...token,
+                    userId: u.id,
+                    userRole: u.role,
+                };
+            }
+            return token;
+        },
+        session: ({session, token})=>{
+            return {
+                ...session,
+                user: {
+                    ...session.user,
+                    usreId: token.userId,
+                    userRole: token.userRole
+                }
+            }
+        }
+    }
 }
