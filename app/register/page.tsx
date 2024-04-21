@@ -1,12 +1,12 @@
 import RegisterForm from "@/components/auth/register-form";
 import Container from "@/components/ui/container";
-import { authOptions } from "@/libs/next-auth";
+import { authOption } from "@/libs/next-auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 const Register = async () => {
 
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOption);
 
     if(session?.user.userId) redirect("/")
 
